@@ -1,10 +1,10 @@
 {
-  "name": "rehype-rewrite",
+  "name": "rehype-multi-rewrite",
   "version": "4.0.2",
-  "description": "Rewrite element with rehype.",
+  "description": "Rewrite elements with rehype.",
   "homepage": "https://jaywcjlove.github.io/rehype-rewrite",
   "funding": "https://jaywcjlove.github.io/#/sponsor",
-  "author": "Kenny Wong <wowohoo@qq.com>",
+  "author": "Rayner Lim <rlrh1996@gmail.com>",
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jaywcjlove/rehype-rewrite"
+    "url": "https://github.com/rlrh/rehype-multi-rewrite"
   },
   "files": [
     "src",

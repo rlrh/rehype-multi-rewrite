@@ -1,34 +1,37 @@
-rehype-rewrite
+rehype-multi-rewrite
 ===
 <!--rehype:style=display: flex; height: 230px; align-items: center; justify-content: center; font-size: 38px;-->
 
-[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-048754?logo=buymeacoffee)](https://jaywcjlove.github.io/#/sponsor)
+<!-- [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-048754?logo=buymeacoffee)](https://jaywcjlove.github.io/#/sponsor)
 [![Downloads](https://img.shields.io/npm/dm/rehype-rewrite.svg?style=flat)](https://www.npmjs.com/package/rehype-rewrite)
 [![NPM version](https://img.shields.io/npm/v/rehype-rewrite.svg?style=flat)](https://npmjs.org/package/rehype-rewrite)
 [![Build](https://github.com/jaywcjlove/rehype-rewrite/actions/workflows/ci.yml/badge.svg)](https://github.com/jaywcjlove/rehype-rewrite/actions/workflows/ci.yml)
 [![Coverage Status](https://jaywcjlove.github.io/rehype-rewrite/badges.svg)](https://jaywcjlove.github.io/rehype-rewrite/lcov-report/)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/rehype-rewrite)](https://bundlephobia.com/result?p=rehype-rewrite)
-[![Repo Dependents](https://badgen.net/github/dependents-repo/jaywcjlove/rehype-rewrite)](https://github.com/jaywcjlove/rehype-rewrite/network/dependents)
+[![Repo Dependents](https://badgen.net/github/dependents-repo/jaywcjlove/rehype-rewrite)](https://github.com/jaywcjlove/rehype-rewrite/network/dependents) -->
 
-Rewrite element with [rehype](https://github.com/rehypejs/rehype).
+Rewrite elements with [rehype](https://github.com/rehypejs/rehype).
 
 ## Installation
 
 This package is [ESM only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c): Node 12+ is needed to use it and it must be `import` instead of `require`.
 
 ```bash
-npm install rehype-rewrite
+npm install rehype-multi-rewrite
 ```
 
 ## Usage
 
-> 🚧  Migrate from rehype-rewrite ~~v2.x~~<!--rehype:style=color: red;--> to `v3.x`<!--rehype:style=background-color: #4caf50; color: #fff;-->.
+> 🚧  Migrate from rehype-rewrite
 > 
 > ```diff
 > rehype()
 > - .use(rehypeRewrite, (node, index, parent) => {})
-> + .use(rehypeRewrite, {
-> +   rewrite: (node, index, parent) => {}
+> - .use(rehypeRewrite, {
+> -   rewrite: (node, index, parent) => {}
+> - })
+> + .use(rehypeMultiRewrite, {
+> +   '': (node, index, parent) => {}
 > + })
 > ```
 <!--rehype:style=border-left-color: #fddf4c;-->
@@ -36,14 +39,14 @@ npm install rehype-rewrite
 <!--rehype:-->
 ```js
 import { rehype } from 'rehype';
-import rehypeRewrite from 'rehype-rewrite';
+import rehypeMultiRewrite from 'rehype-multi-rewrite';
 import stringify from 'rehype-stringify';
 
 const html = `<h1>header</h1>`;
 const htmlStr = rehype()
   .data('settings', { fragment: true })
-  .use(rehypeRewrite, {
-    rewrite: (node, index, parent) => {
+  .use(rehypeMultiRewrite, {
+    '': (node, index, parent) => {
       if(node.type == 'text' && node.value == 'header') {
         node.value = ''
       }
@@ -71,24 +74,25 @@ import { Plugin } from 'unified';
 import { Root, Element, ElementContent, RootContent } from 'hast';
 /** Get the node tree source code string */
 export declare const getCodeString: (data?: ElementContent[], code?: string) => string;
-export declare type RehypeRewriteOptions = {
-  /**
-   * Select an element to be wrapped. Expects a string selector that can be passed to hast-util-select ([supported selectors](https://github.com/syntax-tree/hast-util-select/blob/master/readme.md#support)).
-   * If `selector` is not set then wrap will check for a body all elements.
-   */
-  selector?: string;
-  /** Rewrite Element. */
-  rewrite(node: Root | RootContent, index: number | null, parent: Root | Element | null): void;
+/**
+ * Select elements to be wrapped. Expects string selectors that can be passed to hast-util-select ([supported selectors](https://github.com/syntax-tree/hast-util-select/blob/master/readme.md#support)).
+ */
+export declare type RehypeMultiRewriteOptions = {
+  [selector: string]: (
+    node: Root | RootContent,
+    index?: number,
+    parent?: Root | Element
+  ) => void;
 };
-declare const remarkRewrite: Plugin<[RehypeRewriteOptions?], Root>;
-export default remarkRewrite;
+declare const remarkMultiRewrite: Plugin<[RehypeMultiRewriteOptions?], Root>;
+export default remarkMultiRewrite;
 ```
 
 ### `selector?: string;`
 
-Select an element to be wrapped. Expects a string selector that can be passed to hast-util-select ([supported selectors](https://github.com/syntax-tree/hast-util-select/blob/master/readme.md#support)). If `selector` is not set then wrap will check for a body all elements.
+Select an element to be wrapped. Expects a string selector that can be passed to hast-util-select ([supported selectors](https://github.com/syntax-tree/hast-util-select/blob/master/readme.md#support)). If `selector` is an empty string then wrap will check for a body all elements.
 
-### `rewrite(node, index, parent): void;`
+### `(node, index, parent) => void`
 
 Rewrite element.
 
@@ -98,15 +102,14 @@ Rewrite element.
 
 ```js
 import { rehype } from 'rehype';
-import rehypeRewrite from 'rehype-rewrite';
+import rehypeMultiRewrite from 'rehype-multi-rewrite';
 import stringify from 'rehype-stringify';
 
 const html = `<h1>header</h1><h1>header</h1><h1 class="title3">header</h1>`;
 const htmlStr = rehype()
   .data('settings', { fragment: true })
-  .use(rehypeRewrite, {
-    selector: 'h1',
-    rewrite: (node) => {
+  .use(rehypeMultiRewrite, {
+    'h1': (node) => {
       if (node.type === 'element') {
         node.properties.className = 'test';
       }
@@ -135,16 +138,14 @@ const htmlStr = rehype()
 
 ```js
 import { rehype } from 'rehype';
-import rehypeRewrite from 'rehype-rewrite';
+import rehypeMultiRewrite from 'rehype-multi-rewrite';
 import stringify from 'rehype-stringify';
 
 const html = `<h1>header</h1>`;
 const htmlStr = rehype()
-  .use(rehypeRewrite, {
-    rewrite: (node) => {
-      if (node.type == 'element' && node.tagName == 'body') {
-        node.properties = { ...node.properties, style: 'color:red;'}
-      }
+  .use(rehypeMultiRewrite, {
+    'body': (node) => {
+      node.properties = { ...node.properties, style: 'color:red;'}
     }
   })
   .use(stringify)
@@ -166,24 +167,22 @@ const htmlStr = rehype()
 
 ```js
 import { rehype } from 'rehype';
-import rehypeRewrite from 'rehype-rewrite';
+import rehypeMultiRewrite from 'rehype-multi-rewrite';
 import stringify from 'rehype-stringify';
 
 const html = `<h1>hello</h1>`;
 const htmlStr = rehype()
   .data('settings', { fragment: true })
-  .use(rehypeRewrite, {
-    rewrite: (node) => {
-      if (node.type == 'element' && node.tagName == 'h1') {
-        node.children = [ ...node.children, {
-          type: 'element',
-          tagName: 'span',
-          properties: {},
-          children: [
-            {type: 'text', value: ' world'}
-          ]
-        }]
-      }
+  .use(rehypeMultiRewrite, {
+    'h1': (node) => {
+      node.children = [ ...node.children, {
+        type: 'element',
+        tagName: 'span',
+        properties: {},
+        children: [
+          {type: 'text', value: ' world'}
+        ]
+      }]
     }
   })
   .use(stringify)
@@ -208,7 +207,7 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import rehypeRaw from 'rehype-raw';
 import remark2rehype from 'remark-rehype';
-import rehypeRewrite from 'rehype-rewrite';
+import rehypeMultiRewrite from 'rehype-multi-rewrite';
 import stringify from 'rehype-stringify';
 
 const html = `<h1>hello</h1>`;
@@ -216,11 +215,9 @@ const htmlStr = unified()
   .use(remarkParse)
   .use(remark2rehype, { allowDangerousHtml: true })
   .use(rehypeRaw)
-  .use(rehypeRewrite, {
-    rewrite: (node) => {
-      if (node.type == 'element' && node.tagName == 'h1') {
-        node.properties = { ...node.properties, style: 'color:red;' }
-      }
+  .use(rehypeMultiRewrite, {
+    'h1': (node) => {
+      node.properties = { ...node.properties, style: 'color:red;' }
     }
   })
   .use(stringify)

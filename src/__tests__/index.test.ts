@@ -4,7 +4,7 @@ import remark2rehype from 'remark-rehype';
 import { rehype } from 'rehype';
 import rehypeRaw from 'rehype-raw';
 import stringify from 'rehype-stringify';
-import rehypeRewrite, { getCodeString } from '../index.js';
+import rehypeMultiRewrite, { getCodeString } from '../index.js';
 
 describe('getCodeString test case', () => {
   it('selector options', async () => {
@@ -33,15 +33,14 @@ describe('getCodeString test case', () => {
   });
 })
 
-describe('rehype-rewrite test case', () => {
+describe('rehype-multi-rewrite test case', () => {
   it('selector options', async () => {
     const html = `<h1>header</h1>`;
     const expected = `<h1 class="test">header</h1>`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite, {
-        selector: 'h1',
-        rewrite: (node) => {
+      .use(rehypeMultiRewrite, {
+        'h1': (node) => {
           if (node.type === 'element') {
             node.properties = { ...node.properties, class: 'test' }
           }
@@ -59,9 +58,8 @@ describe('rehype-rewrite test case', () => {
     const expected = `<h1 class="test">header</h1><h1 class="test">header</h1><h1 class="test">header</h1>`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite, {
-        selector: 'h1',
-        rewrite: (node) => {
+      .use(rehypeMultiRewrite, {
+        'h1': (node) => {
           if (node.type === 'element') {
             node.properties!.className = 'test';
           }
@@ -79,9 +77,8 @@ describe('rehype-rewrite test case', () => {
     const expected = `<h1>header</h1>`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite, {
-        selector: 'h1.good',
-        rewrite: (node) => {
+      .use(rehypeMultiRewrite, {
+        'h1.good': (node) => {
           if (node.type === 'element') {
             node.properties = { ...node.properties, class: 'test' }
           }
@@ -99,7 +96,7 @@ describe('rehype-rewrite test case', () => {
     const expected = `<h1>header</h1>`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite)
+      .use(rehypeMultiRewrite)
       .use(stringify)
       .processSync(html)
       .toString()
@@ -112,9 +109,9 @@ describe('rehype-rewrite test case', () => {
     const expected = `<h1></h1>`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite, {
-        rewrite: (node) => {
-          if(node.type == 'text' && node.value == 'header') {
+      .use(rehypeMultiRewrite, {
+        '': (node) => {
+          if (node.type == 'text' && node.value == 'header') {
             node.value = ''
           }
         }
@@ -130,8 +127,8 @@ describe('rehype-rewrite test case', () => {
     const html = `<h1>header</h1>`;
     const expected = `<html><head></head><body style="color:red;"><h1>header</h1></body></html>`
     const htmlStr = rehype()
-      .use(rehypeRewrite, {
-        rewrite: (node) => {
+      .use(rehypeMultiRewrite, {
+        '': (node) => {
           if (node.type == 'element' && node.tagName == 'body') {
             node.properties = { ...node.properties, style: 'color:red;'}
           }
@@ -149,8 +146,8 @@ describe('rehype-rewrite test case', () => {
     const expected = `<h1>hello<span> world</span></h1>`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite, {
-        rewrite: (node) => {
+      .use(rehypeMultiRewrite, {
+        '': (node) => {
           if (node.type == 'element' && node.tagName == 'h1') {
             node.children = [ ...node.children, {
               type: 'element',
@@ -177,8 +174,8 @@ describe('rehype-rewrite test case', () => {
       .use(remarkParse)
       .use(remark2rehype, { allowDangerousHtml: true })
       .use(rehypeRaw)
-      .use(rehypeRewrite, {
-        rewrite: (node) => {
+      .use(rehypeMultiRewrite, {
+        '': (node) => {
           if (node.type == 'element' && node.tagName == 'p') {
             node.properties = { ...node.properties, style: 'color:red;' }
           }
@@ -196,7 +193,7 @@ describe('rehype-rewrite test case', () => {
     const expected = `Hello World!`
     const htmlStr = rehype()
       .data('settings', { fragment: true })
-      .use(rehypeRewrite, {} as any)
+      .use(rehypeMultiRewrite, {} as any)
       .use(stringify)
       .processSync(markdown)
       .toString()
