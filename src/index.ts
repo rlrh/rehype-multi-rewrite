@@ -23,23 +23,30 @@ export const getCodeString = (
   return code;
 };
 
-/**
+export type RehypeMultiRewriteOptions = {
+  /**
  * Select elements to be wrapped. Expects string selectors that can be passed to hast-util-select ([supported selectors](https://github.com/syntax-tree/hast-util-select/blob/master/readme.md#support)).
  */
-export type RehypeMultiRewriteOptions = {
-  [selector: string]: (
+  selectors?: {
+    [selector: string]: (
+      node: Element,
+      index?: number,
+      parent?: Root | Element
+    ) => void;
+  };
+  /** Rewrite Element. */
+  rewrite?: (
     node: Root | RootContent,
     index?: number,
     parent?: Root | Element
   ) => void;
 };
 
-const remarkMultiRewrite: Plugin<[RehypeMultiRewriteOptions?], Root> = (
-  options = {}
-) => {
+const remarkMultiRewrite: Plugin<[RehypeMultiRewriteOptions?], Root> = (options = {}) => {
+  const { selectors = {}, rewrite } = options;
   return (tree) => {
-    for (const [selector, rewrite] of Object.entries(options)) {
-      if (!rewrite || typeof rewrite !== "function") return;
+    for (const [selector, rewrite] of Object.entries(selectors)) {
+      if (!rewrite || typeof rewrite !== "function") continue;
       if (selector && typeof selector === "string") {
         const selected = selectAll(selector, tree);
         if (selected && selected.length > 0) {
@@ -51,13 +58,12 @@ const remarkMultiRewrite: Plugin<[RehypeMultiRewriteOptions?], Root> = (
             }
           );
         }
-        return;
       }
-
-      visit(tree, (node: Root | RootContent, index, parent) => {
-        rewrite(node, index, parent);
-      });
     }
+    if (!rewrite || typeof rewrite !== 'function') return;
+    visit(tree, (node: Root | RootContent, index, parent) => {
+      rewrite(node, index, parent);
+    });
   };
 };
 
